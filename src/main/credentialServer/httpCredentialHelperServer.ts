@@ -159,17 +159,14 @@ export class HttpCredentialHelperServer {
     try {
       const stdout = await this.runWithInput(data, helperName, [commandName]);
 
-      console.log(`QQQ: output for ${ commandName }: ${ stdout }`);
       if (outputChecker(stdout)) {
         response.writeHead(200, { 'Content-Type': 'text/plain' });
         response.write(stdout);
 
         return await Promise.resolve();
       }
-      console.log(`QQQ: outputChecker failed, setting to stderr\n`);
       stderr = stdout;
     } catch (err: any) {
-      console.log(`QQQ: caught command ${ commandName }, err: ${ err },\n full error:\n`, err);
       stderr = err.stderr ?? err.stdout ?? '';
     }
     console.debug(`credentialServer: ${ commandName }: writing back status 400, error: ${ stderr }`);
@@ -230,20 +227,15 @@ export class HttpCredentialHelperServer {
       proc.on('error', (data) => {
         console.log(`error data: ${ typeof data.toString() }`);
         reject({ stderr: data.toString() });
-        // stderrs.push(data.toString());
       });
 
       proc.on('close', (_code: number, _signal: string) => {
-        console.log(`QQQ: got close with code ${ _code }/signal ${ _signal }`);
         code = _code;
         signal = _signal;
       });
 
       proc.on('exit', (_code: number) => {
-        if (_code && !code) {
-          code = _code;
-        }
-        console.log(`QQQ: got exit with code ${ _code }`);
+        code &&= _code;
         if (!code && !signal) {
           resolve(stdoutArray.join(''));
         } else {
